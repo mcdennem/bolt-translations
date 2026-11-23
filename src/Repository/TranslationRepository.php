@@ -5,17 +5,23 @@ declare(strict_types=1);
 namespace Mcdennem\BoltTranslations\Repository;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Schema\Table;
+use Doctrine\DBAL\Types\Exception\TypesException;
 
 class TranslationRepository
 {
-    public const TABLE = 'bolt_translations';
+    public const string TABLE = 'bolt_translations';
 
     public function __construct(
         private readonly Connection $connection
     ) {
     }
 
+    /**
+     * @throws TypesException
+     * @throws Exception
+     */
     public function ensureTable(): void
     {
         $schemaManager = $this->connection->createSchemaManager();
@@ -36,6 +42,9 @@ class TranslationRepository
         $schemaManager->createTable($table);
     }
 
+    /**
+     * @throws Exception
+     */
     public function save(string $domain, string $key, string $locale, ?string $message): void
     {
         $criteria = [
@@ -59,7 +68,20 @@ class TranslationRepository
     }
 
     /**
+     * Removes a key for all locales.
+     * @throws Exception
+     */
+    public function delete(string $domain, string $key): void
+    {
+        $this->connection->delete(self::TABLE, [
+            'domain' => $domain,
+            'trans_key' => $key,
+        ]);
+    }
+
+    /**
      * @return string[]
+     * @throws Exception
      */
     public function getLocales(): array
     {
@@ -72,6 +94,7 @@ class TranslationRepository
      * One row per domain + key, with a message per locale.
      *
      * @return array<int, array{domain: string, key: string, messages: array<string, ?string>}>
+     * @throws Exception
      */
     public function getOverview(?string $search = null): array
     {

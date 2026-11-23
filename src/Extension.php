@@ -32,6 +32,24 @@ class Extension extends BaseExtension
                 [],
                 ['GET']
             ),
+            'bolt_translations_save' => new Route(
+                '%bolt.backend_url%/translations/save',
+                ['_controller' => TranslationsController::class . '::save'],
+                [],
+                [],
+                '',
+                [],
+                ['POST']
+            ),
+            'bolt_translations_delete' => new Route(
+                '%bolt.backend_url%/translations/delete',
+                ['_controller' => TranslationsController::class . '::delete'],
+                [],
+                [],
+                '',
+                [],
+                ['POST']
+            ),
         ];
     }
 }

@@ -9,6 +9,8 @@
 {% endblock title %}
 
 {% block main %}
+    {% set token = csrf_token(csrf_id) %}
+
     <form method="get" action="{{ path('bolt_translations') }}" class="mb-4">
         <div class="input-group">
             <input type="search" name="q" value="{{ search }}" class="form-control" placeholder="Search key or translation">
@@ -18,33 +20,72 @@
         </div>
     </form>
 
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Key</th>
+            {% for locale in locales %}
+                <th>{{ locale|upper }}</th>
+            {% endfor %}
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>
+                <input type="text" name="key" form="add" class="form-control" placeholder="New key" required>
+            </td>
+            {% for locale in locales %}
+                <td>
+                    <input type="text" name="messages[{{ locale }}]" form="add" class="form-control">
+                </td>
+            {% endfor %}
+            <td class="text-nowrap">
+                <form id="add" method="post" action="{{ path('bolt_translations_save') }}">
+                    <input type="hidden" name="domain" value="messages">
+                    <input type="hidden" name="q" value="{{ search }}">
+                    <input type="hidden" name="_token" value="{{ token }}">
+                    <button type="submit" class="btn btn-primary btn-sm">Add</button>
+                </form>
+            </td>
+        </tr>
+
+        {% for item in translations %}
+            {% set formId = 'save-' ~ loop.index %}
+            <tr>
+                <td>
+                    <code>{{ item.key }}</code>
+                    {% if item.domain != 'messages' %}
+                        <small class="text-muted">({{ item.domain }})</small>
+                    {% endif %}
+                </td>
+                {% for locale in locales %}
+                    <td>
+                        <input type="text" name="messages[{{ locale }}]" form="{{ formId }}" value="{{ item.messages[locale] ?? '' }}" class="form-control">
+                    </td>
+                {% endfor %}
+                <td class="text-nowrap">
+                    <form id="{{ formId }}" method="post" action="{{ path('bolt_translations_save') }}" class="d-inline">
+                        <input type="hidden" name="domain" value="{{ item.domain }}">
+                        <input type="hidden" name="key" value="{{ item.key }}">
+                        <input type="hidden" name="q" value="{{ search }}">
+                        <input type="hidden" name="_token" value="{{ token }}">
+                        <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+                    </form>
+                    <form method="post" action="{{ path('bolt_translations_delete') }}" class="d-inline" onsubmit="return confirm('Delete {{ item.key|e('js') }}?');">
+                        <input type="hidden" name="domain" value="{{ item.domain }}">
+                        <input type="hidden" name="key" value="{{ item.key }}">
+                        <input type="hidden" name="q" value="{{ search }}">
+                        <input type="hidden" name="_token" value="{{ token }}">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
     {% if translations is empty %}
         <p>No translations found.</p>
-    {% else %}
-        <table class="table table-striped">
-            <thead>
-            <tr>
-                <th>Key</th>
-                {% for locale in locales %}
-                    <th>{{ locale|upper }}</th>
-                {% endfor %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for item in translations %}
-                <tr>
-                    <td>
-                        <code>{{ item.key }}</code>
-                        {% if item.domain != 'messages' %}
-                            <small class="text-muted">({{ item.domain }})</small>
-                        {% endif %}
-                    </td>
-                    {% for locale in locales %}
-                        <td>{{ item.messages[locale] ?? '' }}</td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
     {% endif %}
 {% endblock main %}
