@@ -36,7 +36,7 @@ class TranslationsController extends AbstractController
 
         return $this->render('@bolt-translations/index.html.twig', [
             'locales' => $this->getLocales(),
-            'translations' => $this->repository->getOverview($search),
+            'translations' => $this->filterByPrefix($this->repository->getOverview($search)),
             'search' => $search,
             'csrf_id' => self::CSRF_ID,
         ]);
@@ -101,11 +101,40 @@ class TranslationsController extends AbstractController
      */
     private function getLocales(): array
     {
+        return array_values(array_unique(array_merge(
+            $this->getConfigValue('locales'),
+            $this->repository->getLocales()
+        )));
+    }
+
+    /**
+     * Keeps only keys that start with one of the configured prefixes. No prefixes means all keys.
+     *
+     * @param array<int, array{domain: string, key: string, messages: array<string, ?string>}> $translations
+     * @return array<int, array{domain: string, key: string, messages: array<string, ?string>}>
+     */
+    private function filterByPrefix(array $translations): array
+    {
+        $prefixes = array_filter($this->getConfigValue('prefixes'));
+
+        if ($prefixes === []) {
+            return $translations;
+        }
+
+        return array_values(array_filter(
+            $translations,
+            fn (array $item): bool => array_any($prefixes, fn ($prefix): bool => str_starts_with($item['key'], (string) $prefix))
+        ));
+    }
+
+    /**
+     * A list setting from the extension config, or an empty array when it is not set.
+     */
+    private function getConfigValue(string $name): array
+    {
         $extension = $this->extensionRegistry->getExtension(Extension::class);
 
-        $configLocales = (array)$extension?->getConfig()->get('locales', []);
-
-        return array_values(array_unique(array_merge($configLocales, $this->repository->getLocales())));
+        return (array) $extension?->getConfig()->get($name, []);
     }
 
     private function backToOverview(Request $request): RedirectResponse

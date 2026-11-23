@@ -2,3 +2,8 @@
 locales:
     - en
     - nl
+
+# Only show keys that start with one of these prefixes, e.g. "label.".
+# Leave empty to show all keys.
+prefixes:
+    - label.
