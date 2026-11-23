@@ -5,7 +5,7 @@
     "license": "MIT",
     "keywords": ["bolt", "extension", "translations"],
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.4",
         "bolt/core": "^6.0"
     },
     "autoload": {

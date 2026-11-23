@@ -91,6 +91,34 @@ class TranslationRepository
     }
 
     /**
+     * All non-empty messages for one locale, grouped by domain.
+     *
+     * @return array<string, array<string, string>>
+     * @throws Exception
+     */
+    public function getMessages(string $locale): array
+    {
+        $schemaManager = $this->connection->createSchemaManager();
+
+        if (!$schemaManager->tablesExist([self::TABLE])) {
+            return [];
+        }
+
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT domain, trans_key, message FROM ' . self::TABLE . " WHERE locale = ? AND message IS NOT NULL AND message <> ''",
+            [$locale]
+        );
+
+        $messages = [];
+
+        foreach ($rows as $row) {
+            $messages[$row['domain']][$row['trans_key']] = $row['message'];
+        }
+
+        return $messages;
+    }
+
+    /**
      * One row per domain + key, with a message per locale.
      *
      * @return array<int, array{domain: string, key: string, messages: array<string, ?string>}>
