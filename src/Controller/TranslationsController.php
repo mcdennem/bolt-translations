@@ -8,6 +8,7 @@ use Bolt\Extension\ExtensionRegistry;
 use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Types\Exception\TypesException;
 use Mcdennem\BoltTranslations\Extension;
+use Mcdennem\BoltTranslations\Import\XliffImporter;
 use Mcdennem\BoltTranslations\Repository\TranslationRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -20,6 +21,7 @@ class TranslationsController extends AbstractController
 
     public function __construct(
         private readonly TranslationRepository $repository,
+        private readonly XliffImporter $importer,
         private readonly ExtensionRegistry $extensionRegistry
     ) {
     }
@@ -89,6 +91,39 @@ class TranslationsController extends AbstractController
         $this->repository->delete($domain, $key);
 
         $this->addFlash('success', sprintf('Translation "%s" deleted.', $key));
+
+        return $this->backToOverview($request);
+    }
+
+    /**
+     * Only admins may import, because an import overwrites existing translations.
+     *
+     * @throws Exception
+     * @throws TypesException
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        if (!$this->isCsrfTokenValid(self::CSRF_ID, (string) $request->request->get('_token'))) {
+            $this->addFlash('danger', 'Invalid token, please try again.');
+
+            return $this->backToOverview($request);
+        }
+
+        $result = $this->importer->import();
+
+        if ($result === []) {
+            $this->addFlash('warning', 'No .xlf files found in translations/.');
+
+            return $this->backToOverview($request);
+        }
+
+        $this->addFlash('success', sprintf(
+            '%d translations imported from %d files.',
+            array_sum($result),
+            count($result)
+        ));
 
         return $this->backToOverview($request);
     }

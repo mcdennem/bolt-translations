@@ -88,4 +88,14 @@
     {% if translations is empty %}
         <p>No translations found.</p>
     {% endif %}
+
+    {% if is_granted('ROLE_ADMIN') %}
+        <hr class="my-4">
+
+        <form method="post" action="{{ path('bolt_translations_import') }}" onsubmit="return confirm('Import all translations from translations/*.xlf? Existing translations with the same key and language will be overwritten.');">
+            <input type="hidden" name="_token" value="{{ token }}">
+            <button type="submit" class="btn btn-warning">Import from .xlf files</button>
+            <small class="text-muted ml-2">Copies the translations from <code>translations/*.xlf</code> into the database. Use this once after installing.</small>
+        </form>
+    {% endif %}
 {% endblock main %}

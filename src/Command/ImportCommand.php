@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Mcdennem\BoltTranslations\Command;
 
-use Mcdennem\BoltTranslations\Repository\TranslationRepository;
+use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Types\Exception\TypesException;
+use Mcdennem\BoltTranslations\Import\XliffImporter;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Translation\Loader\XliffFileLoader;
 
 #[AsCommand(
     name: 'translations:import',
@@ -20,51 +20,32 @@ use Symfony\Component\Translation\Loader\XliffFileLoader;
 class ImportCommand extends Command
 {
     public function __construct(
-        private readonly TranslationRepository $repository,
-        #[Autowire('%kernel.project_dir%')]
-        private readonly string $projectDir
+        private readonly XliffImporter $importer
     ) {
         parent::__construct();
     }
 
+    /**
+     * @throws Exception
+     * @throws TypesException
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        $this->repository->ensureTable();
+        $result = $this->importer->import();
 
-        $files = glob($this->projectDir . '/translations/*.xlf') ?: [];
-
-        if ($files === []) {
+        if ($result === []) {
             $io->warning('No .xlf files found in translations/.');
 
             return Command::SUCCESS;
         }
 
-        $loader = new XliffFileLoader();
-        $count = 0;
-
-        foreach ($files as $file) {
-            // messages+intl-icu.nl.xlf → domain "messages", locale "nl"
-            $name = basename($file, '.xlf');
-            $locale = substr($name, strrpos($name, '.') + 1);
-            $domain = substr($name, 0, strrpos($name, '.'));
-
-            $catalogue = $loader->load($file, $locale, $domain);
-
-            foreach ($catalogue->all() as $catalogueDomain => $messages) {
-                $cleanDomain = str_replace('+intl-icu', '', $catalogueDomain);
-
-                foreach ($messages as $key => $message) {
-                    $this->repository->save($cleanDomain, (string) $key, $locale, $message);
-                    $count++;
-                }
-            }
-
-            $io->writeln(basename($file));
+        foreach ($result as $file => $count) {
+            $io->writeln(sprintf('%s: %d', $file, $count));
         }
 
-        $io->success(sprintf('%d translations imported.', $count));
+        $io->success(sprintf('%d translations imported.', array_sum($result)));
 
         return Command::SUCCESS;
     }

@@ -50,6 +50,15 @@ class Extension extends BaseExtension
                 [],
                 ['POST']
             ),
+            'bolt_translations_import' => new Route(
+                '%bolt.backend_url%/translations/import',
+                ['_controller' => TranslationsController::class . '::import'],
+                [],
+                [],
+                '',
+                [],
+                ['POST']
+            ),
         ];
     }
 }
