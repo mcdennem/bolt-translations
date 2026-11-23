@@ -24,7 +24,7 @@ class Extension extends BaseExtension
     {
         return [
             'bolt_translations' => new Route(
-                '/admin/translations',
+                '%bolt.backend_url%/translations',
                 ['_controller' => TranslationsController::class . '::index'],
                 [],
                 [],
