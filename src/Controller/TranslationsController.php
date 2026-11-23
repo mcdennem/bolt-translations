@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace Mcdennem\BoltTranslations\Controller;
 
+use Bolt\Extension\ExtensionRegistry;
 use Doctrine\DBAL\Exception;
+use Doctrine\DBAL\Types\Exception\TypesException;
+use Mcdennem\BoltTranslations\Extension;
 use Mcdennem\BoltTranslations\Repository\TranslationRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -16,12 +19,14 @@ class TranslationsController extends AbstractController
     private const string CSRF_ID = 'bolt_translations';
 
     public function __construct(
-        private readonly TranslationRepository $repository
+        private readonly TranslationRepository $repository,
+        private readonly ExtensionRegistry $extensionRegistry
     ) {
     }
 
     /**
      * @throws Exception
+     * @throws TypesException
      */
     public function index(Request $request): Response
     {
@@ -30,13 +35,16 @@ class TranslationsController extends AbstractController
         $search = trim((string) $request->query->get('q', ''));
 
         return $this->render('@bolt-translations/index.html.twig', [
-            'locales' => $this->repository->getLocales(),
+            'locales' => $this->getLocales(),
             'translations' => $this->repository->getOverview($search),
             'search' => $search,
             'csrf_id' => self::CSRF_ID,
         ]);
     }
 
+    /**
+     * @throws Exception
+     */
     public function save(Request $request): RedirectResponse
     {
         if (!$this->isCsrfTokenValid(self::CSRF_ID, (string) $request->request->get('_token'))) {
@@ -64,6 +72,9 @@ class TranslationsController extends AbstractController
         return $this->backToOverview($request);
     }
 
+    /**
+     * @throws Exception
+     */
     public function delete(Request $request): RedirectResponse
     {
         if (!$this->isCsrfTokenValid(self::CSRF_ID, (string) $request->request->get('_token'))) {
@@ -80,6 +91,21 @@ class TranslationsController extends AbstractController
         $this->addFlash('success', sprintf('Translation "%s" deleted.', $key));
 
         return $this->backToOverview($request);
+    }
+
+    /**
+     * Locales from the extension config first, then any extra locales found in the database.
+     *
+     * @return string[]
+     * @throws Exception
+     */
+    private function getLocales(): array
+    {
+        $extension = $this->extensionRegistry->getExtension(Extension::class);
+
+        $configLocales = (array)$extension?->getConfig()->get('locales', []);
+
+        return array_values(array_unique(array_merge($configLocales, $this->repository->getLocales())));
     }
 
     private function backToOverview(Request $request): RedirectResponse

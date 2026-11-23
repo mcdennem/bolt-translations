@@ -1,0 +1,4 @@
+# Languages that get a column in the Translations overview.
+locales:
+    - en
+    - nl
