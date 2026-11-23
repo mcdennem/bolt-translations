@@ -4,6 +4,17 @@
     "type": "bolt-extension",
     "license": "MIT",
     "keywords": ["bolt", "extension", "translations"],
+    "homepage": "https://github.com/mcdennem/bolt-translations",
+    "authors": [
+        {
+            "name": "Dennis Meiderwijk",
+            "homepage": "https://github.com/mcdennem"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/mcdennem/bolt-translations/issues",
+        "source": "https://github.com/mcdennem/bolt-translations"
+    },
     "require": {
         "php": ">=8.4",
         "bolt/core": "^6.0"
