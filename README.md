@@ -9,7 +9,7 @@ Translations are stored in the database instead of `.xlf` files, so deployments 
 - **Translations** menu item in the Bolt admin
 - Overview with one column per language, and search on key and translation
 - Add, edit and delete translations
-- Import existing translations from `translations/*.xlf`
+- Import existing translations from `translations/*.xlf`, with a button in the admin or a console command
 - Database translations take priority; keys that are not in the database fall back to the regular `.xlf` translations
 
 ## Requirements
@@ -48,7 +48,10 @@ Bolt only creates this file once. When you update the extension, new settings ar
 
 ## Importing existing translations
 
-To copy the translations from `translations/*.xlf` into the database:
+Copy the translations from `translations/*.xlf` into the database in one of two ways:
+
+- **In the admin:** open **Translations** and click **Import from .xlf files** at the bottom of the page. The button is only visible to users with the admin role. Use this on shared hosting without SSH access.
+- **On the command line:**
 
 ```bash
 php bin/console translations:import
