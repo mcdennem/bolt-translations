@@ -1,6 +1,6 @@
 {
     "name": "mcdennem/bolt-translations",
-    "description": "Craft-like translations manager for Bolt CMS",
+    "description": "Manage your site's translations in the Bolt admin, stored in the database.",
     "type": "bolt-extension",
     "license": "MIT",
     "keywords": ["bolt", "extension", "translations"],

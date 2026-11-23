@@ -1,6 +1,6 @@
 # Bolt Translations
 
-A Craft-like translations manager for Bolt CMS. Editors manage translations in the Bolt admin, and the site uses them right away.
+Manage your site's translations in the Bolt admin. Editors search, add and edit translations on one page, and the site uses them right away.
 
 Translations are stored in the database instead of `.xlf` files, so deployments and FTP uploads never overwrite changes made by editors.
 
