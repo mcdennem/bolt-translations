@@ -1,0 +1,26 @@
+{
+    "name": "mcdennem/bolt-translations",
+    "description": "Craft-like translations manager for Bolt CMS",
+    "type": "bolt-extension",
+    "license": "MIT",
+    "keywords": ["bolt", "extension", "translations"],
+    "require": {
+        "php": ">=8.2",
+        "bolt/core": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mcdennem\\BoltTranslations\\": "src/"
+        }
+    },
+    "extra": {
+        "entrypoint": "Mcdennem\\BoltTranslations\\Extension"
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": false,
+            "symfony/flex": false,
+            "drupol/composer-packages": false
+        }
+    }
+}
