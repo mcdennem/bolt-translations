@@ -1,6 +1,5 @@
 <?php
 
-
 declare(strict_types=1);
 
 namespace Mcdennem\BoltTranslations\Repository;
@@ -14,8 +13,7 @@ class TranslationRepository
 
     public function __construct(
         private readonly Connection $connection
-    )
-    {
+    ) {
     }
 
     public function ensureTable(): void
@@ -58,5 +56,51 @@ class TranslationRepository
         }
 
         $this->connection->insert(self::TABLE, $criteria + ['message' => $message]);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getLocales(): array
+    {
+        return $this->connection->fetchFirstColumn(
+            'SELECT DISTINCT locale FROM ' . self::TABLE . ' ORDER BY locale'
+        );
+    }
+
+    /**
+     * One row per domain + key, with a message per locale.
+     *
+     * @return array<int, array{domain: string, key: string, messages: array<string, ?string>}>
+     */
+    public function getOverview(?string $search = null): array
+    {
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT domain, trans_key, locale, message FROM ' . self::TABLE . ' ORDER BY domain, trans_key'
+        );
+
+        $grouped = [];
+
+        foreach ($rows as $row) {
+            $id = $row['domain'] . '|' . $row['trans_key'];
+
+            $grouped[$id] ??= [
+                'domain' => $row['domain'],
+                'key' => $row['trans_key'],
+                'messages' => [],
+            ];
+
+            $grouped[$id]['messages'][$row['locale']] = $row['message'];
+        }
+
+        if ($search !== null && $search !== '') {
+            $grouped = array_filter($grouped, function (array $item) use ($search): bool {
+                $haystack = $item['key'] . ' ' . implode(' ', array_filter($item['messages']));
+
+                return mb_stripos($haystack, $search) !== false;
+            });
+        }
+
+        return array_values($grouped);
     }
 }

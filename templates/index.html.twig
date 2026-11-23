@@ -9,5 +9,42 @@
 {% endblock title %}
 
 {% block main %}
-    <p>Werkt.</p>
+    <form method="get" action="{{ path('bolt_translations') }}" class="mb-4">
+        <div class="input-group">
+            <input type="search" name="q" value="{{ search }}" class="form-control" placeholder="Search key or translation">
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-secondary">Search</button>
+            </div>
+        </div>
+    </form>
+
+    {% if translations is empty %}
+        <p>No translations found.</p>
+    {% else %}
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>Key</th>
+                {% for locale in locales %}
+                    <th>{{ locale|upper }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+            {% for item in translations %}
+                <tr>
+                    <td>
+                        <code>{{ item.key }}</code>
+                        {% if item.domain != 'messages' %}
+                            <small class="text-muted">({{ item.domain }})</small>
+                        {% endif %}
+                    </td>
+                    {% for locale in locales %}
+                        <td>{{ item.messages[locale] ?? '' }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
 {% endblock main %}
